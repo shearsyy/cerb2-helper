@@ -2,50 +2,40 @@ plugins {
 	id 'java'
 }
 
+def runeLiteVersion = 'latest.release'
+
 repositories {
-	mavenLocal()
+	mavenCentral()
 	maven {
 		url = 'https://repo.runelite.net'
-		content {
-			includeGroupByRegex("net\\.runelite.*")
-		}
 	}
-	mavenCentral()
 }
-
-def runeLiteVersion = 'latest.release'
-def pluginMainClass = 'com.example.ExamplePluginTest'
 
 dependencies {
-	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
+	compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
+	compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.30'
+	annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.30'
 
-	compileOnly 'org.projectlombok:lombok:1.18.30'
-	annotationProcessor 'org.projectlombok:lombok:1.18.30'
-
-	testImplementation 'junit:junit:4.12'
-	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
-	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
+	testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
 }
 
-group = 'com.example'
+group = 'com.cerberushelper'
+version = '1.0-SNAPSHOT'
 
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 	options.release.set(11)
 }
 
-tasks.register('run', JavaExec) {
-	classpath = sourceSets.test.runtimeClasspath
-	mainClass = pluginMainClass
-
-	jvmArgs "-ea"
-	args "--developer-mode", "--debug"
-}
-
+// Lets you run/debug the plugin locally inside a real RuneLite client without
+// submitting to the Plugin Hub. See README.md for how this is actually used,
+// and why doing so still carries account risk under Jagex's rules.
 tasks.register('shadowJar', Jar) {
 	dependsOn configurations.testRuntimeClasspath
+
 	manifest {
-		attributes('Main-Class': pluginMainClass, 'Multi-Release': true)
+		attributes('Main-Class': 'com.cerberushelper.CerberusHelperPluginTest', 'Multi-Release': true)
 	}
 
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -63,7 +53,9 @@ tasks.register('shadowJar', Jar) {
 	exclude 'META-INF/*.RSA'
 	exclude '**/module-info.class'
 
-	group = BasePlugin.BUILD_GROUP
 	archiveClassifier.set('shadow')
-	archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
+}
+
+test {
+	useJUnit()
 }
